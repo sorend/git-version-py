@@ -66,26 +66,25 @@ def get_previous_tag_and_version():
         except:
             pass
                 
-    return previous_tag, previous_version
+    return cb, previous_tag, previous_version
 
 
 def get_new_version():
-    pt, pv = get_previous_tag_and_version()
-    
-    previous_version = semantic_version.Version(major=pv.major, minor=pv.minor, patch=pv.patch + 1)
-
-    cb = current_branch_or_tag()
-
-    if cb != "main":
+    cb, pt, pv = get_previous_tag_and_version()
+    if cb == "main":
+        cd = commits_distance(pt)
+        prerelease = ["dev", cd] if int(cd) > 0 else []
+        previous_version = semantic_version.Version(major=pv.major, minor=pv.minor, patch=pv.patch, prerelease=prerelease)
+    else:
         branch_sanitized_name = re.sub(r"[^a-z0-9]", "", cb.lower())[:20]
-        prerelease = [branch_sanitized_name, commits_distance(pv), current_commit_hash()]
-        previous_version = semantic_version.Version(major=previous_version.major, minor=previous_version.minor, patch=previous_version.patch, prerelease=prerelease)
+        prerelease = [branch_sanitized_name, commits_distance(pt), current_commit_hash()]
+        previous_version = semantic_version.Version(major=pv.major, minor=pv.minor, patch=pv.patch + 1, prerelease=prerelease)
 
     return str(previous_version)
 
 
 def get_previous_version():
-    pt, pv = get_previous_tag_and_version()
+    cb, pt, pv = get_previous_tag_and_version()
     return str(pv)
 
 
